@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+
+<script>
+  var waitInterval, countdownInterval;
+  var endTime = null;
+
+  function setDisplay(text, className) {
+    const display = document.querySelector('#display');
+    display.innerText = text;
+    display.className = className;
+  }
+  function justify(num, size) {
+    return ('0000' + num).slice(-size);
+  };
+  function formatDuration(duration) {
+    const seconds = Math.floor(duration / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const modSeconds = seconds % 60;
+    const millis = duration % 1000;
+    return minutes + ':' + justify(modSeconds, 2) + '.' + justify(millis, 3);
+  }
+  function go() {
+    waitInterval = setInterval(wait, 500);
+    setDisplay('waiting to start...', 'wait');
+  }
+  async function wait() {
+    const result = await fetch('/get-timer');
+    const data = await result.json();
+    if (endTime != null) {
+      return;
+    }
+    if (data.started) {
+      clearInterval(waitInterval);
+      endTime = Date.now() + data.remainingDuration - parseDuration(document.querySelector('#time').value);
+      countdownInterval = setInterval(countdown, 16);
+    }
+  }
+  function countdown() {
+    const remaining = endTime - Date.now();
+    if (remaining < 0) {
+      clearInterval(countdownInterval);
+      setDisplay('go', 'go');
+      endTime = null;
+    } else {
+      setDisplay(formatDuration(remaining), remaining < 3000 ? 'almostDone' : 'countdown');
+    }
+  }
+  function parseDuration(str) {
+    const parts = str.split(':').map(x => parseInt(x, 10));
+    return 1000 * (parts[0] * 60 + parts[1]);
+  }
+</script>
+
+<style>
+  html {
+    font-family: sans serif;
+  }
+  #id {
+    border: 1px solid #ccc;
+    width: 500px;
+  }
+  #display {
+    border: 1px solid #ccc;
+    font-size: 2rem;
+    width: 500px;
+    padding: 2rem;
+    margin: 1rem 0;
+  }
+  #display.wait {
+    background-color: #eee;
+  }
+  #display.countdown {
+    background-color: #dfd;
+  }
+  #display.almostDone {
+    background-color: #ffd;
+  }
+  #display.go {
+    background-color: #fdd;
+  }
+</style>
+
+<div id="input">
+  set time
+  <input type="text" id="time" placeholder="eg 7:23"></input>
+  <input type="button" onclick="go()" value="set"></input>
+</div>
+
+<div id="display">
+  set time
+</div>

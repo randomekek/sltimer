@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+
+<script>
+  async function go() {
+    const durationString = document.querySelector('#time').value;
+    const durationMs = parseDuration(durationString);
+    const result = await fetch('/start-timer-sl?durationMs=' + durationMs);
+    if (!result.ok) {
+      const message = await result.text();
+      alert('failed: ' + message);
+    }
+  }
+  function parseDuration(str) {
+    const parts = str.split(':').map(x => parseInt(x, 10));
+    return 1000 * (parts[0] * 60 + parts[1]);
+  }
+</script>
+
+<style>
+  html {
+    font-family: sans serif;
+  }
+  #id {
+    border: 1px solid #ccc;
+    width: 500px;
+  }
+</style>
+
+<div id="input">
+  set biggest time
+  <input type="text" id="time" placeholder="eg 7:23"></input>
+  <input type="button" onclick="go()" value="set"></input>
+</div>
